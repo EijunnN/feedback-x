@@ -1,4 +1,12 @@
-import { jsonb, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import {
+  boolean,
+  integer,
+  jsonb,
+  pgTable,
+  text,
+  timestamp,
+  unique,
+} from "drizzle-orm/pg-core";
 
 export const projects = pgTable("projects", {
   id: text("id").primaryKey(),
@@ -6,6 +14,21 @@ export const projects = pgTable("projects", {
   name: text("name").notNull(),
   domain: text("domain"),
   apiKey: text("api_key").notNull().unique(),
+
+  // Widget customization (Pro+)
+  widgetPosition: text("widget_position").default("bottom-right"),
+  widgetColor: text("widget_color").default("#6366f1"),
+  widgetText: text("widget_text").default("Feedback"),
+  showBranding: boolean("show_branding").default(true),
+
+  // Feedback types enabled
+  enableBugs: boolean("enable_bugs").default(true),
+  enableIdeas: boolean("enable_ideas").default(true),
+  enableOther: boolean("enable_other").default(true),
+
+  // Notifications (Pro+)
+  notifyEmail: text("notify_email"),
+
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -32,3 +55,15 @@ export const subscriptions = pgTable("subscriptions", {
   status: text("status").default("active"),
   currentPeriodEnd: timestamp("current_period_end"),
 });
+
+export const usageStats = pgTable(
+  "usage_stats",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id").notNull(),
+    month: text("month").notNull(),
+    feedbackCount: integer("feedback_count").default(0),
+    createdAt: timestamp("created_at").defaultNow(),
+  },
+  (table) => [unique("user_month_unique").on(table.userId, table.month)],
+);

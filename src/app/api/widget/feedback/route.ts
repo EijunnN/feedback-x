@@ -1,14 +1,14 @@
-import { and, eq, gte, sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { type NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
-import { feedbacks, projects, subscriptions } from "@/db/schema";
-
-const PLAN_LIMITS = {
-  free: { feedbacksPerMonth: 50, allowImages: false },
-  pro: { feedbacksPerMonth: 500, allowImages: true },
-  max: { feedbacksPerMonth: Infinity, allowImages: true },
-};
+import { feedbacks, projects } from "@/db/schema";
+import {
+  canSubmitFeedback,
+  getUserPlan,
+  incrementFeedbackCount,
+  PLANS,
+} from "@/lib/plans";
 
 export async function POST(request: NextRequest) {
   const origin = request.headers.get("origin");
@@ -53,36 +53,16 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const subscription = await db
-      .select()
-      .from(subscriptions)
-      .where(eq(subscriptions.userId, project.userId))
-      .then((rows) => rows[0]);
-
-    const plan = (subscription?.plan as keyof typeof PLAN_LIMITS) || "free";
-    const limits = PLAN_LIMITS[plan];
-
-    const startOfMonth = new Date();
-    startOfMonth.setDate(1);
-    startOfMonth.setHours(0, 0, 0, 0);
-
-    const feedbackCount = await db
-      .select({ count: sql<number>`count(*)` })
-      .from(feedbacks)
-      .where(
-        and(
-          eq(feedbacks.projectId, project.id),
-          gte(feedbacks.createdAt, startOfMonth),
-        ),
-      )
-      .then((rows) => Number(rows[0].count));
-
-    if (feedbackCount >= limits.feedbacksPerMonth) {
+    const canSubmit = await canSubmitFeedback(project.userId);
+    if (!canSubmit) {
       return NextResponse.json(
         { error: "Monthly feedback limit reached" },
         { status: 429, headers: corsHeaders },
       );
     }
+
+    const plan = await getUserPlan(project.userId);
+    const limits = PLANS[plan];
 
     let imageUrl: string | null = null;
     if (image && limits.allowImages) {
@@ -98,6 +78,8 @@ export async function POST(request: NextRequest) {
       userEmail: userEmail || null,
       metadata: metadata || null,
     });
+
+    await incrementFeedbackCount(project.userId);
 
     return NextResponse.json(
       { success: true },

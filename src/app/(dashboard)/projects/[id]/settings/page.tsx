@@ -3,6 +3,7 @@ import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { notFound, redirect } from "next/navigation";
 import { CopyButton } from "@/components/copy-button";
+import { ProjectSettingsForm } from "@/components/project-settings-form";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -12,11 +13,11 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { db } from "@/db";
 import { projects } from "@/db/schema";
+import { getUserPlanDetails } from "@/lib/plans";
 
 async function updateProject(formData: FormData) {
   "use server";
@@ -28,9 +29,31 @@ async function updateProject(formData: FormData) {
   const name = formData.get("name") as string;
   const domain = formData.get("domain") as string;
 
+  const planDetails = await getUserPlanDetails(userId);
+
+  const updateData: Record<string, unknown> = {
+    name,
+    domain: domain || null,
+  };
+
+  if (planDetails.allowCustomization) {
+    updateData.widgetColor = formData.get("widgetColor") as string;
+    updateData.widgetPosition = formData.get("widgetPosition") as string;
+    updateData.widgetText = formData.get("widgetText") as string;
+    updateData.notifyEmail = (formData.get("notifyEmail") as string) || null;
+  }
+
+  if (planDetails.allowRemoveBranding) {
+    updateData.showBranding = formData.get("showBranding") === "true";
+  }
+
+  updateData.enableBugs = formData.get("enableBugs") === "true";
+  updateData.enableIdeas = formData.get("enableIdeas") === "true";
+  updateData.enableOther = formData.get("enableOther") === "true";
+
   await db
     .update(projects)
-    .set({ name, domain: domain || null })
+    .set(updateData)
     .where(and(eq(projects.id, id), eq(projects.userId, userId)));
 
   revalidatePath(`/projects/${id}/settings`);
@@ -67,6 +90,8 @@ export default async function ProjectSettingsPage({
     .then((rows) => rows[0]);
 
   if (!project) notFound();
+
+  const planDetails = await getUserPlanDetails(userId);
 
   const widgetScript = `<script src="${process.env.NEXT_PUBLIC_APP_URL || "https://yourapp.com"}/widget/feedback-widget.js" data-project-key="${project.apiKey}"></script>`;
 
@@ -110,35 +135,11 @@ export default async function ProjectSettingsPage({
           </div>
         </section>
 
-        <section>
-          <h2 className="text-lg font-semibold mb-4">Project Settings</h2>
-          <form action={updateProject} className="space-y-4">
-            <input type="hidden" name="id" value={project.id} />
-            <div className="space-y-2">
-              <label htmlFor="name" className="text-sm font-medium">
-                Project Name
-              </label>
-              <Input
-                id="name"
-                name="name"
-                defaultValue={project.name}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <label htmlFor="domain" className="text-sm font-medium">
-                Domain
-              </label>
-              <Input
-                id="domain"
-                name="domain"
-                defaultValue={project.domain || ""}
-                placeholder="example.com"
-              />
-            </div>
-            <Button type="submit">Save Changes</Button>
-          </form>
-        </section>
+        <ProjectSettingsForm
+          project={project}
+          planDetails={planDetails}
+          updateAction={updateProject}
+        />
 
         <section>
           <h2 className="text-lg font-semibold mb-4">API Key</h2>
