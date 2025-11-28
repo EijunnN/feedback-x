@@ -24,6 +24,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "drizzle-kit": "^0.31.7",
+    "knip": "^5.70.2",
     "tailwindcss": "^4",
     "typescript": "^5"
   }
