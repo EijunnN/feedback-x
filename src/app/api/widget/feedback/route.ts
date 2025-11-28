@@ -9,6 +9,7 @@ import {
   incrementFeedbackCount,
   PLANS,
 } from "@/lib/plans";
+import { realtime } from "@/lib/realtime";
 
 export async function POST(request: NextRequest) {
   const origin = request.headers.get("origin");
@@ -69,14 +70,33 @@ export async function POST(request: NextRequest) {
       imageUrl = await uploadToImageKit(image);
     }
 
+    const feedbackId = nanoid();
+    const now = new Date();
+
     await db.insert(feedbacks).values({
-      id: nanoid(),
+      id: feedbackId,
       projectId: project.id,
       type,
       message,
       imageUrl,
       userEmail: userEmail || null,
       metadata: metadata || null,
+    });
+
+    // Emit realtime event for live updates
+    await realtime.emit("feedback:new", {
+      projectId: project.id,
+      feedback: {
+        id: feedbackId,
+        projectId: project.id,
+        type,
+        message,
+        imageUrl,
+        userEmail: userEmail || null,
+        metadata: metadata || null,
+        status: "new",
+        createdAt: now.toISOString(),
+      },
     });
 
     await incrementFeedbackCount(project.userId);

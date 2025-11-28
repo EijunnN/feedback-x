@@ -1,9 +1,9 @@
 import { auth } from "@clerk/nextjs/server";
 import { and, desc, eq } from "drizzle-orm";
-import { MessageSquare, Settings } from "lucide-react";
+import { Settings } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { FeedbackCard } from "@/components/feedback-card";
+import { FeedbackList } from "@/components/feedback-list";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -67,26 +67,7 @@ export default async function ProjectPage({
         </div>
       </header>
       <div className="flex flex-1 flex-col gap-4 p-4">
-        {projectFeedbacks.length === 0 ? (
-          <div className="flex flex-1 flex-col items-center justify-center gap-4 text-center">
-            <MessageSquare className="h-12 w-12 text-muted-foreground" />
-            <div>
-              <h2 className="text-xl font-semibold">No feedback yet</h2>
-              <p className="text-muted-foreground">
-                Install the widget to start collecting feedback
-              </p>
-            </div>
-            <Button variant="outline" asChild>
-              <Link href={`/projects/${id}/settings`}>View Installation</Link>
-            </Button>
-          </div>
-        ) : (
-          <div className="grid gap-4">
-            {projectFeedbacks.map((feedback) => (
-              <FeedbackCard key={feedback.id} feedback={feedback} />
-            ))}
-          </div>
-        )}
+        <FeedbackList projectId={id} initialFeedbacks={projectFeedbacks} />
       </div>
     </>
   );
