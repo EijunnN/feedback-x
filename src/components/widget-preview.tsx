@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 interface WidgetPreviewProps {
   color: string;
@@ -24,6 +24,26 @@ export function WidgetPreview({
 }: WidgetPreviewProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedType, setSelectedType] = useState<string | null>(null);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      setSelectedImage(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemoveImage = () => {
+    setSelectedImage(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
 
   const positionStyles: Record<string, React.CSSProperties> = {
     "bottom-right": { bottom: 16, right: 16 },
@@ -141,10 +161,49 @@ export function WidgetPreview({
                 Tell us what&apos;s on your mind...
               </span>
             </div>
+            {selectedImage && (
+              <div className="relative">
+                {/* biome-ignore lint/performance/noImgElement: base64 preview */}
+                <img
+                  src={selectedImage}
+                  alt="Selected"
+                  className="w-full h-16 object-cover rounded border border-zinc-800"
+                />
+                <button
+                  type="button"
+                  onClick={handleRemoveImage}
+                  className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center"
+                >
+                  <svg
+                    className="w-2.5 h-2.5 text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+              </div>
+            )}
             <div className="flex gap-2">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleImageSelect}
+                className="hidden"
+              />
               <button
                 type="button"
+                onClick={() => fileInputRef.current?.click()}
                 className="p-2 rounded border border-zinc-800 text-zinc-500 hover:text-zinc-300"
+                title="Upload image"
               >
                 <svg
                   className="w-4 h-4"
