@@ -7,14 +7,19 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
 } from "@/components/ui/breadcrumb";
-import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { db } from "@/db";
 import { subscriptions } from "@/db/schema";
 import { PLANS } from "@/lib/polar";
+import { CheckoutSuccessBanner } from "./checkout-success-banner";
+import { UpgradeButton } from "./upgrade-button";
 
-export default async function BillingPage() {
+export default async function BillingPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ success?: string }>;
+}) {
   const { userId } = await auth();
   if (!userId) return null;
 
@@ -25,6 +30,7 @@ export default async function BillingPage() {
     .then((rows) => rows[0]);
 
   const currentPlan = (subscription?.plan as keyof typeof PLANS) || "free";
+  const { success } = await searchParams;
 
   return (
     <>
@@ -40,6 +46,8 @@ export default async function BillingPage() {
         </Breadcrumb>
       </header>
       <div className="flex flex-1 flex-col gap-8 p-4">
+        {success && !subscription && <CheckoutSuccessBanner />}
+
         <div>
           <h1 className="text-2xl font-bold">Billing</h1>
           <p className="text-muted-foreground">
@@ -54,17 +62,11 @@ export default async function BillingPage() {
               (typeof PLANS)[keyof typeof PLANS],
             ][]
           ).map(([key, plan]) => {
-            const isCurrent = key === currentPlan;
-            const isUpgrade =
-              key !== "free" &&
-              (currentPlan === "free" ||
-                (currentPlan === "pro" && key === "max"));
-
             return (
               <div
                 key={key}
                 className={`rounded-lg border p-6 ${
-                  isCurrent ? "border-primary" : ""
+                  key === currentPlan ? "border-primary" : ""
                 }`}
               >
                 <div className="mb-4">
@@ -96,23 +98,13 @@ export default async function BillingPage() {
                   </li>
                 </ul>
 
-                {isCurrent ? (
-                  <Button disabled className="w-full">
-                    Current Plan
-                  </Button>
-                ) : isUpgrade && "polarProductId" in plan ? (
-                  <Button asChild className="w-full">
-                    <a
-                      href={`/api/checkout?products=${plan.polarProductId}&metadata[userId]=${userId}&metadata[plan]=${key}`}
-                    >
-                      Upgrade to {plan.name}
-                    </a>
-                  </Button>
-                ) : (
-                  <Button variant="outline" disabled className="w-full">
-                    {key === "free" ? "Downgrade" : "Not available"}
-                  </Button>
-                )}
+                <UpgradeButton
+                  planKey={key}
+                  plan={plan}
+                  currentPlan={currentPlan}
+                  hasSubscription={!!subscription?.polarSubscriptionId}
+                  userId={userId}
+                />
               </div>
             );
           })}

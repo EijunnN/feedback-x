@@ -64,6 +64,22 @@ export const POST = Webhooks({
     if (payload.type === "subscription.updated") {
       const subscription = payload.data;
 
+      // Check if this is an upgrade by looking at the checkout metadata
+      let plan: string | undefined;
+      if (subscription.checkoutId) {
+        try {
+          const checkout = await polar.checkouts.get({
+            id: subscription.checkoutId,
+          });
+          if (checkout.metadata?.upgrade === "true") {
+            plan = checkout.metadata?.plan as string;
+            console.log("Subscription upgraded to:", plan);
+          }
+        } catch {
+          // Checkout might not exist or be accessible
+        }
+      }
+
       await db
         .update(subscriptions)
         .set({
@@ -71,6 +87,7 @@ export const POST = Webhooks({
           currentPeriodEnd: subscription.currentPeriodEnd
             ? new Date(subscription.currentPeriodEnd)
             : null,
+          ...(plan && { plan }),
         })
         .where(eq(subscriptions.polarSubscriptionId, subscription.id));
     }
