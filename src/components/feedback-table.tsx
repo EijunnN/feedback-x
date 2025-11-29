@@ -16,7 +16,13 @@ import { useState, useMemo } from "react";
 import type { feedbacks } from "@/db/schema";
 import { useRealtime } from "@/lib/realtime-client";
 import { Button } from "./ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle,
+  DialogDescription // Added for accessibility
+} from "./ui/dialog";
 import { Input } from "./ui/input";
 import {
   Table,
@@ -381,106 +387,119 @@ export function FeedbackTable({
       {/* Detail Modal */}
       <Dialog
         open={!!selectedFeedback}
-        onOpenChange={() => setSelectedFeedback(null)}
+        onOpenChange={(open) => {
+          if (!open) setSelectedFeedback(null);
+        }}
       >
-        <DialogContent className="bg-zinc-950 border-zinc-800 max-w-2xl">
-          <DialogHeader>
+        <DialogContent className="bg-zinc-950 border-zinc-800 max-w-2xl w-full max-h-[85vh] overflow-y-auto flex flex-col p-0 gap-0">
+          <DialogHeader className="p-6 pb-2 sticky top-0 bg-zinc-950 z-10 border-b border-zinc-800/50">
             <DialogTitle className="font-mono text-sm uppercase tracking-wider text-zinc-300">
               Feedback Detail
             </DialogTitle>
+            <DialogDescription className="sr-only">
+              Detailed view of the selected feedback item including message, status, and metadata.
+            </DialogDescription>
           </DialogHeader>
-          {selectedFeedback && (
-            <div className="space-y-4">
-              <div className="flex items-center gap-3">
-                {(() => {
-                  const Icon =
-                    typeIcons[
-                      selectedFeedback.type as keyof typeof typeIcons
-                    ] || MessageCircle;
-                  const typeColor =
-                    typeColors[
-                      selectedFeedback.type as keyof typeof typeColors
-                    ] || typeColors.other;
-                  return (
-                    <div
-                      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm border ${typeColor}`}
-                    >
-                      <Icon className="h-3.5 w-3.5" />
-                      <span className="font-mono text-xs uppercase">
-                        {selectedFeedback.type}
-                      </span>
-                    </div>
-                  );
-                })()}
-                <span
-                  className={`inline-block px-2 py-0.5 rounded-sm border font-mono text-[10px] uppercase ${
-                    statusStyles[
-                      selectedFeedback.status as keyof typeof statusStyles
-                    ] || statusStyles.new
-                  }`}
-                >
-                  {selectedFeedback.status}
-                </span>
-                <span className="text-xs font-mono text-zinc-600 ml-auto">
-                  {selectedFeedback.createdAt &&
-                    formatDistanceToNow(new Date(selectedFeedback.createdAt), {
-                      addSuffix: true,
-                    })}
-                </span>
-              </div>
 
-              <div className="p-4 bg-zinc-900/50 border border-zinc-800 rounded-sm">
-                <p className="text-sm text-zinc-300 leading-relaxed whitespace-pre-wrap">
-                  {selectedFeedback.message}
-                </p>
-              </div>
+          <div className="p-6 space-y-6">
+            {selectedFeedback && (
+              <>
+                {/* Header: Type, Status, Date */}
+                <div className="flex flex-wrap items-center gap-3">
+                  {(() => {
+                    const Icon =
+                      typeIcons[
+                        selectedFeedback.type as keyof typeof typeIcons
+                      ] || MessageCircle;
+                    const typeColor =
+                      typeColors[
+                        selectedFeedback.type as keyof typeof typeColors
+                      ] || typeColors.other;
+                    return (
+                      <div
+                        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm border ${typeColor}`}
+                      >
+                        <Icon className="h-3.5 w-3.5" />
+                        <span className="font-mono text-xs uppercase">
+                          {selectedFeedback.type}
+                        </span>
+                      </div>
+                    );
+                  })()}
+                  <span
+                    className={`inline-block px-2 py-0.5 rounded-sm border font-mono text-[10px] uppercase ${
+                      statusStyles[
+                        selectedFeedback.status as keyof typeof statusStyles
+                      ] || statusStyles.new
+                    }`}
+                  >
+                    {selectedFeedback.status}
+                  </span>
+                  <span className="text-xs font-mono text-zinc-600 ml-auto">
+                    {selectedFeedback.createdAt &&
+                      formatDistanceToNow(new Date(selectedFeedback.createdAt), {
+                        addSuffix: true,
+                      })}
+                  </span>
+                </div>
 
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <p className="text-[10px] font-mono uppercase text-zinc-500 mb-1">
-                    User Email
-                  </p>
-                  <p className="text-zinc-300 font-mono">
-                    {selectedFeedback.userEmail || "Anonymous"}
+                {/* Message Body */}
+                <div className="p-4 bg-zinc-900/50 border border-zinc-800 rounded-sm">
+                  <p className="text-sm text-zinc-300 leading-relaxed whitespace-pre-wrap break-words">
+                    {selectedFeedback.message}
                   </p>
                 </div>
-                <div>
-                  <p className="text-[10px] font-mono uppercase text-zinc-500 mb-1">
-                    Feedback ID
-                  </p>
-                  <p className="text-zinc-300 font-mono text-xs">
-                    {selectedFeedback.id}
-                  </p>
-                </div>
-              </div>
 
-              {selectedFeedback.imageUrl && (
-                <div>
-                  <p className="text-[10px] font-mono uppercase text-zinc-500 mb-2">
-                    Attached Screenshot
-                  </p>
-                  <div className="border border-zinc-800 rounded-sm overflow-hidden bg-black p-2">
-                    {/* biome-ignore lint/a11y/useAltText: external imagekit url */}
-                    <img
-                      src={selectedFeedback.imageUrl}
-                      className="rounded-sm max-h-80 w-auto mx-auto"
-                    />
+                {/* Info Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                  <div className="p-3 bg-zinc-900/30 rounded-sm border border-zinc-800/50">
+                    <p className="text-[10px] font-mono uppercase text-zinc-500 mb-1">
+                      User Email
+                    </p>
+                    <p className="text-zinc-300 font-mono truncate" title={selectedFeedback.userEmail || ""}>
+                      {selectedFeedback.userEmail || "Anonymous"}
+                    </p>
+                  </div>
+                  <div className="p-3 bg-zinc-900/30 rounded-sm border border-zinc-800/50">
+                    <p className="text-[10px] font-mono uppercase text-zinc-500 mb-1">
+                      Feedback ID
+                    </p>
+                    <p className="text-zinc-300 font-mono text-xs truncate" title={selectedFeedback.id}>
+                      {selectedFeedback.id}
+                    </p>
                   </div>
                 </div>
-              )}
 
-              {selectedFeedback.metadata ? (
-                <div>
-                  <p className="text-[10px] font-mono uppercase text-zinc-500 mb-2">
-                    Metadata
-                  </p>
-                  <pre className="p-3 bg-black border border-zinc-800 rounded-sm text-xs text-zinc-400 font-mono overflow-auto">
-                    {JSON.stringify(selectedFeedback.metadata, null, 2)}
-                  </pre>
-                </div>
-              ) : null}
-            </div>
-          )}
+                {/* Screenshot */}
+                {selectedFeedback.imageUrl && (
+                  <div>
+                    <p className="text-[10px] font-mono uppercase text-zinc-500 mb-2">
+                      Attached Screenshot
+                    </p>
+                    <div className="border border-zinc-800 rounded-sm overflow-hidden bg-black p-2 flex justify-center">
+                      {/* biome-ignore lint/a11y/useAltText: user content */}
+                      <img
+                        src={selectedFeedback.imageUrl}
+                        className="rounded-sm max-h-[400px] w-auto object-contain"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Metadata */}
+                {selectedFeedback.metadata ? (
+                  <div>
+                    <p className="text-[10px] font-mono uppercase text-zinc-500 mb-2">
+                      Metadata
+                    </p>
+                    <pre className="p-3 bg-black border border-zinc-800 rounded-sm text-xs text-zinc-400 font-mono overflow-auto max-h-[200px]">
+                      {JSON.stringify(selectedFeedback.metadata, null, 2)}
+                    </pre>
+                  </div>
+                ) : null}
+              </>
+            )}
+          </div>
         </DialogContent>
       </Dialog>
     </div>
