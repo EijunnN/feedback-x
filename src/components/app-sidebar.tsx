@@ -85,8 +85,6 @@
 //   );
 // }
 
-
-
 "use client";
 
 import { useUser } from "@clerk/nextjs";
@@ -121,18 +119,30 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname();
 
   return (
-    <Sidebar collapsible="icon" className="border-r border-zinc-800 bg-black" {...props}>
+    <Sidebar
+      collapsible="icon"
+      className="border-r border-zinc-800 bg-black"
+      {...props}
+    >
       <SidebarHeader className="border-b border-zinc-800 bg-black py-4">
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton size="lg" asChild className="hover:bg-zinc-900 active:bg-zinc-900 data-[state=open]:bg-zinc-900">
+            <SidebarMenuButton
+              size="lg"
+              asChild
+              className="hover:bg-zinc-900 active:bg-zinc-900 data-[state=open]:bg-zinc-900"
+            >
               <Link href="/projects">
                 <div className="flex aspect-square size-8 items-center justify-center rounded-sm bg-orange-600 text-white">
                   <Terminal className="size-4" />
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-bold tracking-tight text-white font-mono">ANNYA</span>
-                  <span className="truncate text-[10px] text-zinc-500 font-mono uppercase">Console</span>
+                  <span className="truncate font-bold tracking-tight text-white font-mono">
+                    ANNYA
+                  </span>
+                  <span className="truncate text-[10px] text-zinc-500 font-mono uppercase">
+                    Console
+                  </span>
                 </div>
               </Link>
             </SidebarMenuButton>

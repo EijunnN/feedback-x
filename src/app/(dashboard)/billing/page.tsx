@@ -129,9 +129,6 @@
 //   );
 // }
 
-
-
-
 import { auth } from "@clerk/nextjs/server";
 import { eq } from "drizzle-orm";
 import { Check, CreditCard } from "lucide-react";
@@ -173,23 +170,29 @@ export default async function BillingPage({
         <Breadcrumb>
           <BreadcrumbList>
             <BreadcrumbItem>
-              <BreadcrumbPage className="font-mono text-xs uppercase tracking-wider text-orange-500 font-bold">Billing</BreadcrumbPage>
+              <BreadcrumbPage className="font-mono text-xs uppercase tracking-wider text-orange-500 font-bold">
+                Billing
+              </BreadcrumbPage>
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
       </header>
-      
+
       <div className="flex flex-1 flex-col p-8 bg-black">
         {success && !subscription && <CheckoutSuccessBanner />}
 
         <div className="mb-10 flex items-center gap-3 pb-6 border-b border-zinc-800">
-           <div className="p-2 bg-zinc-900 rounded-sm border border-zinc-800">
-              <CreditCard className="h-5 w-5 text-white" />
-           </div>
-           <div>
-              <h1 className="text-xl font-bold text-white tracking-tight">Subscription Status</h1>
-              <p className="text-sm text-zinc-500 font-mono">Manage your billing cycle and limits</p>
-           </div>
+          <div className="p-2 bg-zinc-900 rounded-sm border border-zinc-800">
+            <CreditCard className="h-5 w-5 text-white" />
+          </div>
+          <div>
+            <h1 className="text-xl font-bold text-white tracking-tight">
+              Subscription Status
+            </h1>
+            <p className="text-sm text-zinc-500 font-mono">
+              Manage your billing cycle and limits
+            </p>
+          </div>
         </div>
 
         <div className="grid gap-6 md:grid-cols-3 mb-12">
@@ -210,19 +213,25 @@ export default async function BillingPage({
                 `}
               >
                 {isCurrent && (
-                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-orange-500 text-black px-3 py-1 rounded-sm text-[10px] font-bold font-mono uppercase tracking-widest">
-                        Active Plan
-                    </div>
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-orange-500 text-black px-3 py-1 rounded-sm text-[10px] font-bold font-mono uppercase tracking-widest">
+                    Active Plan
+                  </div>
                 )}
-                
+
                 <div className="mb-6">
-                  <h3 className={`text-xs font-mono uppercase tracking-wider mb-2 ${isCurrent ? 'text-orange-400' : 'text-zinc-500'}`}>
+                  <h3
+                    className={`text-xs font-mono uppercase tracking-wider mb-2 ${isCurrent ? "text-orange-400" : "text-zinc-500"}`}
+                  >
                     {plan.name}
                   </h3>
                   <div className="flex items-baseline gap-1">
-                    <span className="text-3xl font-bold text-white">${plan.price}</span>
+                    <span className="text-3xl font-bold text-white">
+                      ${plan.price}
+                    </span>
                     {plan.price > 0 && (
-                      <span className="text-xs text-zinc-600 font-mono">/mo</span>
+                      <span className="text-xs text-zinc-600 font-mono">
+                        /mo
+                      </span>
                     )}
                   </div>
                 </div>
@@ -231,21 +240,31 @@ export default async function BillingPage({
 
                 <ul className="space-y-4 mb-8 flex-1">
                   <li className="flex items-center gap-3 text-sm text-zinc-300">
-                    <div className={`w-1 h-1 rounded-full ${isCurrent ? 'bg-orange-500' : 'bg-zinc-600'}`} />
+                    <div
+                      className={`w-1 h-1 rounded-full ${isCurrent ? "bg-orange-500" : "bg-zinc-600"}`}
+                    />
                     <span className="font-mono text-xs">
-                        {plan.projects === Infinity ? "UNLIMITED" : plan.projects} PROJECTS
+                      {plan.projects === Infinity ? "UNLIMITED" : plan.projects}{" "}
+                      PROJECTS
                     </span>
                   </li>
                   <li className="flex items-center gap-3 text-sm text-zinc-300">
-                    <div className={`w-1 h-1 rounded-full ${isCurrent ? 'bg-orange-500' : 'bg-zinc-600'}`} />
+                    <div
+                      className={`w-1 h-1 rounded-full ${isCurrent ? "bg-orange-500" : "bg-zinc-600"}`}
+                    />
                     <span className="font-mono text-xs">
-                        {plan.feedbacksPerMonth === Infinity ? "UNLIMITED" : plan.feedbacksPerMonth} FEEDBACKS
+                      {plan.feedbacksPerMonth === Infinity
+                        ? "UNLIMITED"
+                        : plan.feedbacksPerMonth}{" "}
+                      FEEDBACKS
                     </span>
                   </li>
                   <li className="flex items-center gap-3 text-sm text-zinc-300">
-                    <div className={`w-1 h-1 rounded-full ${isCurrent ? 'bg-orange-500' : 'bg-zinc-600'}`} />
+                    <div
+                      className={`w-1 h-1 rounded-full ${isCurrent ? "bg-orange-500" : "bg-zinc-600"}`}
+                    />
                     <span className="font-mono text-xs text-zinc-400">
-                        {plan.allowImages ? "SCREENSHOTS ENABLED" : "TEXT ONLY"}
+                      {plan.allowImages ? "SCREENSHOTS ENABLED" : "TEXT ONLY"}
                     </span>
                   </li>
                 </ul>
@@ -265,16 +284,20 @@ export default async function BillingPage({
         {subscription && subscription.status === "active" && (
           <div className="rounded-sm border border-zinc-800 bg-zinc-900/20 p-6 flex justify-between items-center max-w-3xl">
             <div>
-                <h3 className="font-bold text-white text-sm uppercase font-mono tracking-wider mb-1">Billing Details</h3>
-                <p className="text-xs text-zinc-500 font-mono">
+              <h3 className="font-bold text-white text-sm uppercase font-mono tracking-wider mb-1">
+                Billing Details
+              </h3>
+              <p className="text-xs text-zinc-500 font-mono">
                 Current Cycle: {PLANS[currentPlan].name.toUpperCase()}
-                </p>
+              </p>
             </div>
             {subscription.currentPeriodEnd && (
               <div className="text-right">
-                <div className="text-[10px] text-zinc-600 uppercase font-mono mb-1">Renews On</div>
+                <div className="text-[10px] text-zinc-600 uppercase font-mono mb-1">
+                  Renews On
+                </div>
                 <div className="text-white font-mono text-sm">
-                    {new Date(subscription.currentPeriodEnd).toLocaleDateString()}
+                  {new Date(subscription.currentPeriodEnd).toLocaleDateString()}
                 </div>
               </div>
             )}

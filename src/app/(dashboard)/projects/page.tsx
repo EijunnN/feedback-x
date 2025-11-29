@@ -84,11 +84,16 @@
 //   );
 // }
 
-
-
 import { auth } from "@clerk/nextjs/server";
-import { eq } from "drizzle-orm";
-import { Folder, Plus, Activity } from "lucide-react";
+import { count, eq, sql } from "drizzle-orm";
+import {
+  Activity,
+  Bug,
+  Folder,
+  Lightbulb,
+  MessageCircle,
+  Plus,
+} from "lucide-react";
 import Link from "next/link";
 import {
   Breadcrumb,
@@ -99,7 +104,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { db } from "@/db";
-import { projects } from "@/db/schema";
+import { feedbacks, projects } from "@/db/schema";
 
 export default async function ProjectsPage() {
   const { userId } = await auth();
@@ -110,6 +115,36 @@ export default async function ProjectsPage() {
     .from(projects)
     .where(eq(projects.userId, userId));
 
+  // Get feedback counts per project
+  const feedbackCounts = await db
+    .select({
+      projectId: feedbacks.projectId,
+      type: feedbacks.type,
+      count: count(),
+    })
+    .from(feedbacks)
+    .where(
+      sql`${feedbacks.projectId} IN (SELECT id FROM projects WHERE user_id = ${userId})`,
+    )
+    .groupBy(feedbacks.projectId, feedbacks.type);
+
+  // Create a map for easy lookup
+  const feedbackMap = new Map<
+    string,
+    { bug: number; idea: number; other: number; total: number }
+  >();
+  for (const fc of feedbackCounts) {
+    if (!fc.projectId) continue;
+    if (!feedbackMap.has(fc.projectId)) {
+      feedbackMap.set(fc.projectId, { bug: 0, idea: 0, other: 0, total: 0 });
+    }
+    const entry = feedbackMap.get(fc.projectId)!;
+    if (fc.type === "bug") entry.bug = fc.count;
+    else if (fc.type === "idea") entry.idea = fc.count;
+    else entry.other = fc.count;
+    entry.total += fc.count;
+  }
+
   return (
     <>
       <header className="flex h-14 shrink-0 items-center gap-2 border-b border-zinc-800 bg-black px-4">
@@ -118,12 +153,18 @@ export default async function ProjectsPage() {
         <Breadcrumb>
           <BreadcrumbList>
             <BreadcrumbItem>
-              <BreadcrumbPage className="font-mono text-xs uppercase tracking-wider text-orange-500 font-bold">Projects</BreadcrumbPage>
+              <BreadcrumbPage className="font-mono text-xs uppercase tracking-wider text-orange-500 font-bold">
+                Projects
+              </BreadcrumbPage>
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
         <div className="ml-auto">
-          <Button asChild size="sm" className="bg-white text-black hover:bg-zinc-200 font-mono text-xs uppercase rounded-sm h-8">
+          <Button
+            asChild
+            size="sm"
+            className="bg-white text-black hover:bg-zinc-200 font-mono text-xs uppercase rounded-sm h-8"
+          >
             <Link href="/projects/new">
               <Plus className="mr-2 h-3 w-3" />
               New Project
@@ -135,15 +176,20 @@ export default async function ProjectsPage() {
         {userProjects.length === 0 ? (
           <div className="flex flex-1 flex-col items-center justify-center gap-4 text-center border border-dashed border-zinc-800 rounded-sm p-12 bg-zinc-900/20">
             <div className="h-12 w-12 bg-zinc-900 rounded-sm flex items-center justify-center border border-zinc-800">
-               <Folder className="h-6 w-6 text-zinc-500" />
+              <Folder className="h-6 w-6 text-zinc-500" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-white tracking-tight">No projects found</h2>
+              <h2 className="text-lg font-bold text-white tracking-tight">
+                No projects found
+              </h2>
               <p className="text-sm text-zinc-500 font-mono mt-1">
                 Initialize a project to start collecting data.
               </p>
             </div>
-            <Button asChild className="bg-orange-600 text-white hover:bg-orange-700 font-mono text-xs uppercase rounded-sm">
+            <Button
+              asChild
+              className="bg-orange-600 text-white hover:bg-orange-700 font-mono text-xs uppercase rounded-sm"
+            >
               <Link href="/projects/new">
                 <Plus className="mr-2 h-3 w-3" />
                 Create Project
@@ -152,29 +198,72 @@ export default async function ProjectsPage() {
           </div>
         ) : (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {userProjects.map((project) => (
-              <Link
-                key={project.id}
-                href={`/projects/${project.id}`}
-                className="group relative rounded-sm border border-zinc-800 bg-zinc-950 p-5 transition-all hover:border-zinc-600 hover:bg-zinc-900"
-              >
-                <div className="flex justify-between items-start mb-4">
+            {userProjects.map((project) => {
+              const stats = feedbackMap.get(project.id) || {
+                bug: 0,
+                idea: 0,
+                other: 0,
+                total: 0,
+              };
+              return (
+                <Link
+                  key={project.id}
+                  href={`/projects/${project.id}`}
+                  className="group relative rounded-sm border border-zinc-800 bg-zinc-950 p-5 transition-all hover:border-zinc-600 hover:bg-zinc-900"
+                >
+                  <div className="flex justify-between items-start mb-4">
                     <div className="h-8 w-8 rounded-sm bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-400 group-hover:text-white group-hover:border-zinc-600">
-                        <Activity className="h-4 w-4" />
+                      <Activity className="h-4 w-4" />
                     </div>
-                    <div className="flex gap-1">
-                        <div className="h-1.5 w-1.5 rounded-full bg-green-500/50 group-hover:bg-green-500" />
+                    <div className="flex items-center gap-1">
+                      <span className="text-xs font-mono text-zinc-500">
+                        {stats.total}
+                      </span>
+                      <div
+                        className={`h-1.5 w-1.5 rounded-full ${stats.total > 0 ? "bg-green-500" : "bg-zinc-600"}`}
+                      />
                     </div>
-                </div>
-                
-                <h3 className="font-bold text-white tracking-tight mb-1">{project.name}</h3>
-                <p className="text-xs font-mono text-zinc-500 truncate">
-                  {project.domain || "No domain configured"}
-                </p>
-                
-                <div className="absolute bottom-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-orange-500/0 to-transparent group-hover:via-orange-500/50 transition-all" />
-              </Link>
-            ))}
+                  </div>
+
+                  <h3 className="font-bold text-white tracking-tight mb-1">
+                    {project.name}
+                  </h3>
+                  <p className="text-xs font-mono text-zinc-500 truncate mb-4">
+                    {project.domain || "No domain configured"}
+                  </p>
+
+                  {/* Feedback stats */}
+                  <div className="flex gap-3 pt-3 border-t border-zinc-800">
+                    <div
+                      className="flex items-center gap-1.5"
+                      title="Bug reports"
+                    >
+                      <Bug className="h-3 w-3 text-red-400" />
+                      <span className="text-xs font-mono text-zinc-400">
+                        {stats.bug}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1.5" title="Ideas">
+                      <Lightbulb className="h-3 w-3 text-yellow-400" />
+                      <span className="text-xs font-mono text-zinc-400">
+                        {stats.idea}
+                      </span>
+                    </div>
+                    <div
+                      className="flex items-center gap-1.5"
+                      title="Other feedback"
+                    >
+                      <MessageCircle className="h-3 w-3 text-blue-400" />
+                      <span className="text-xs font-mono text-zinc-400">
+                        {stats.other}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="absolute bottom-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-orange-500/0 to-transparent group-hover:via-orange-500/50 transition-all" />
+                </Link>
+              );
+            })}
           </div>
         )}
       </div>

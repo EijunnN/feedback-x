@@ -1,6 +1,13 @@
 import { SignOutButton } from "@clerk/nextjs";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import {
+  Activity,
+  Settings as SettingsIcon,
+  ShieldAlert,
+  User,
+} from "lucide-react";
+import Link from "next/link";
+import {
   Breadcrumb,
   BreadcrumbItem,
   BreadcrumbList,
@@ -9,13 +16,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { getUserUsage } from "@/lib/plans";
-import {
-  Activity,
-  Settings as SettingsIcon,
-  ShieldAlert,
-  User,
-} from "lucide-react";
-import Link from "next/link";
 
 export default async function SettingsPage() {
   const { userId } = await auth();
@@ -91,7 +91,9 @@ export default async function SettingsPage() {
                 <div className="h-1.5 w-full bg-zinc-900 rounded-sm overflow-hidden border border-zinc-800">
                   <div
                     className="h-full bg-orange-500 transition-all duration-500 ease-out"
-                    style={{ width: `${Math.min(usage.projects.percentage, 100)}%` }}
+                    style={{
+                      width: `${Math.min(usage.projects.percentage, 100)}%`,
+                    }}
                   />
                 </div>
               </div>
@@ -112,7 +114,9 @@ export default async function SettingsPage() {
                 <div className="h-1.5 w-full bg-zinc-900 rounded-sm overflow-hidden border border-zinc-800">
                   <div
                     className="h-full bg-blue-500 transition-all duration-500 ease-out"
-                    style={{ width: `${Math.min(usage.feedbacks.percentage, 100)}%` }}
+                    style={{
+                      width: `${Math.min(usage.feedbacks.percentage, 100)}%`,
+                    }}
                   />
                 </div>
               </div>

@@ -73,16 +73,12 @@
 //   );
 // }
 
-
-
-
-
 import { auth } from "@clerk/nextjs/server";
 import { and, desc, eq } from "drizzle-orm";
-import { Settings, Terminal } from "lucide-react";
+import { Settings, Table2 } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { FeedbackList } from "@/components/feedback-list";
+import { FeedbackTable } from "@/components/feedback-table";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -127,16 +123,28 @@ export default async function ProjectPage({
         <Breadcrumb>
           <BreadcrumbList>
             <BreadcrumbItem>
-              <BreadcrumbLink href="/projects" className="font-mono text-xs uppercase text-zinc-500 hover:text-zinc-300">Projects</BreadcrumbLink>
+              <BreadcrumbLink
+                href="/projects"
+                className="font-mono text-xs uppercase text-zinc-500 hover:text-zinc-300"
+              >
+                Projects
+              </BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator className="text-zinc-600" />
             <BreadcrumbItem>
-              <BreadcrumbPage className="font-mono text-xs uppercase tracking-wider text-orange-500 font-bold">{project.name}</BreadcrumbPage>
+              <BreadcrumbPage className="font-mono text-xs uppercase tracking-wider text-orange-500 font-bold">
+                {project.name}
+              </BreadcrumbPage>
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
         <div className="ml-auto">
-          <Button variant="outline" size="sm" asChild className="bg-transparent border-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-900 font-mono text-xs uppercase rounded-sm h-8">
+          <Button
+            variant="outline"
+            size="sm"
+            asChild
+            className="bg-transparent border-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-900 font-mono text-xs uppercase rounded-sm h-8"
+          >
             <Link href={`/projects/${id}/settings`}>
               <Settings className="mr-2 h-3 w-3" />
               Config
@@ -144,20 +152,18 @@ export default async function ProjectPage({
           </Button>
         </div>
       </header>
-      
+
       <div className="flex flex-1 flex-col gap-6 p-6 bg-black">
-        {/* Stats Row could go here */}
-        
         <div className="flex items-center gap-2 text-zinc-500 border-b border-zinc-800 pb-2">
-            <Terminal className="h-4 w-4" />
-            <span className="font-mono text-xs uppercase">Incoming Stream</span>
-            <div className="ml-auto flex items-center gap-2">
-                <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
-                <span className="text-[10px] font-mono">LIVE</span>
-            </div>
+          <Table2 className="h-4 w-4" />
+          <span className="font-mono text-xs uppercase">Feedback Console</span>
+          <div className="ml-auto flex items-center gap-2">
+            <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+            <span className="text-[10px] font-mono">LIVE</span>
+          </div>
         </div>
 
-        <FeedbackList projectId={id} initialFeedbacks={projectFeedbacks} />
+        <FeedbackTable projectId={id} initialFeedbacks={projectFeedbacks} />
       </div>
     </>
   );

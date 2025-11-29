@@ -1,4 +1,4 @@
-(() => {
+(async () => {
   const script = document.currentScript;
   const projectKey = script?.getAttribute("data-project-key");
 
@@ -7,20 +7,60 @@
     return;
   }
 
-  const API_URL = script.src.replace(
-    "/widget/feedback-widget.js",
-    "/api/widget/feedback",
-  );
+  const BASE_URL = script.src.replace("/widget/feedback-widget.js", "");
+  const API_URL = `${BASE_URL}/api/widget/feedback`;
+  const CONFIG_URL = `${BASE_URL}/api/widget/config?key=${projectKey}`;
+
+  // Load configuration from server
+  let config = {
+    color: "#6366f1",
+    position: "bottom-right",
+    showBranding: true,
+    enableBugs: true,
+    enableIdeas: true,
+    enableOther: true,
+    bugLabel: "Bug",
+    bugEmoji: "",
+    ideaLabel: "Idea",
+    ideaEmoji: "",
+    otherLabel: "Other",
+    otherEmoji: "",
+    feedbackPlaceholder: "Describe your issue or idea...",
+    brandingText: "Powered by Annya",
+    brandingLink: "https://annya.io",
+  };
+
+  try {
+    const res = await fetch(CONFIG_URL);
+    if (res.ok) {
+      config = { ...config, ...(await res.json()) };
+    }
+  } catch (_e) {
+    console.warn("Feedback Widget: Could not load config, using defaults");
+  }
+
+  // Position styles
+  const positionMap = {
+    "bottom-right": "bottom: 20px; right: 20px;",
+    "bottom-left": "bottom: 20px; left: 20px;",
+    "top-right": "top: 20px; right: 20px;",
+    "top-left": "top: 20px; left: 20px;",
+  };
+  const modalPositionMap = {
+    "bottom-right": "bottom: 90px; right: 20px;",
+    "bottom-left": "bottom: 90px; left: 20px;",
+    "top-right": "top: 90px; right: 20px;",
+    "top-left": "top: 90px; left: 20px;",
+  };
 
   const styles = `
     .fw-trigger {
       position: fixed;
-      bottom: 20px;
-      right: 20px;
+      ${positionMap[config.position] || positionMap["bottom-right"]}
       width: 56px;
       height: 56px;
       border-radius: 50%;
-      background: #6366f1;
+      background: ${config.color};
       border: none;
       cursor: pointer;
       display: flex;
@@ -32,7 +72,7 @@
     }
     .fw-trigger:hover {
       transform: scale(1.05);
-      background: #4f46e5;
+      filter: brightness(0.9);
     }
     .fw-trigger svg {
       width: 24px;
@@ -41,8 +81,7 @@
     }
     .fw-modal {
       position: fixed;
-      bottom: 90px;
-      right: 20px;
+      ${modalPositionMap[config.position] || modalPositionMap["bottom-right"]}
       width: 360px;
       max-width: calc(100vw - 40px);
       background: #18181b;
@@ -111,9 +150,9 @@
       color: #fafafa;
     }
     .fw-type-btn.active {
-      border-color: #6366f1;
-      background: rgba(99, 102, 241, 0.1);
-      color: #6366f1;
+      border-color: ${config.color};
+      background: ${config.color}1a;
+      color: ${config.color};
     }
     .fw-type-btn svg {
       width: 20px;
@@ -134,7 +173,7 @@
     }
     .fw-textarea:focus {
       outline: none;
-      border-color: #6366f1;
+      border-color: ${config.color};
     }
     .fw-textarea::placeholder {
       color: #52525b;
@@ -168,7 +207,7 @@
       flex: 1;
       padding: 10px 16px;
       border: none;
-      background: #6366f1;
+      background: ${config.color};
       border-radius: 8px;
       cursor: pointer;
       color: white;
@@ -177,7 +216,7 @@
       transition: background 0.2s;
     }
     .fw-submit-btn:hover {
-      background: #4f46e5;
+      filter: brightness(0.9);
     }
     .fw-submit-btn:disabled {
       opacity: 0.5;
@@ -202,11 +241,57 @@
       color: #a1a1aa;
       font-size: 14px;
     }
+    .fw-branding {
+      padding: 8px 16px;
+      text-align: center;
+      border-top: 1px solid #27272a;
+    }
+    .fw-branding a {
+      color: #52525b;
+      font-size: 11px;
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .fw-branding a:hover {
+      color: #a1a1aa;
+    }
   `;
 
   const styleEl = document.createElement("style");
   styleEl.textContent = styles;
   document.head.appendChild(styleEl);
+
+  // Build type buttons based on config
+  const typeButtonsHtml = [];
+  if (config.enableBugs) {
+    typeButtonsHtml.push(`
+      <button class="fw-type-btn${typeButtonsHtml.length === 0 ? " active" : ""}" data-type="bug">
+        ${config.bugEmoji ? `<span style="font-size:20px">${config.bugEmoji}</span>` : `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 8h-1.81c-.45-.78-1.07-1.45-1.82-1.96L17 4.41 15.59 3l-2.17 2.17C12.96 5.06 12.49 5 12 5s-.96.06-1.41.17L8.41 3 7 4.41l1.62 1.63C7.88 6.55 7.26 7.22 6.81 8H5v2h1.09c-.05.33-.09.66-.09 1v1H5v2h1v1c0 .34.04.67.09 1H5v2h1.81c1.04 1.79 2.97 3 5.19 3s4.15-1.21 5.19-3H19v-2h-1.09c.05-.33.09-.66.09-1v-1h1v-2h-1v-1c0-.34-.04-.67-.09-1H19V8zm-6 8h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>`}
+        ${config.bugLabel}
+      </button>
+    `);
+  }
+  if (config.enableIdeas) {
+    typeButtonsHtml.push(`
+      <button class="fw-type-btn${typeButtonsHtml.length === 0 ? " active" : ""}" data-type="idea">
+        ${config.ideaEmoji ? `<span style="font-size:20px">${config.ideaEmoji}</span>` : `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7z"/></svg>`}
+        ${config.ideaLabel}
+      </button>
+    `);
+  }
+  if (config.enableOther) {
+    typeButtonsHtml.push(`
+      <button class="fw-type-btn${typeButtonsHtml.length === 0 ? " active" : ""}" data-type="other">
+        ${config.otherEmoji ? `<span style="font-size:20px">${config.otherEmoji}</span>` : `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14l4 4V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/></svg>`}
+        ${config.otherLabel}
+      </button>
+    `);
+  }
+
+  // Build branding section
+  const brandingHtml = config.showBranding
+    ? `<div class="fw-branding"><a href="${config.brandingLink}" target="_blank" rel="noopener">${config.brandingText}</a></div>`
+    : "";
 
   const container = document.createElement("div");
   container.id = "feedback-widget";
@@ -224,20 +309,9 @@
       <div class="fw-body">
         <div class="fw-form">
           <div class="fw-types">
-            <button class="fw-type-btn active" data-type="bug">
-              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 8h-1.81c-.45-.78-1.07-1.45-1.82-1.96L17 4.41 15.59 3l-2.17 2.17C12.96 5.06 12.49 5 12 5s-.96.06-1.41.17L8.41 3 7 4.41l1.62 1.63C7.88 6.55 7.26 7.22 6.81 8H5v2h1.09c-.05.33-.09.66-.09 1v1H5v2h1v1c0 .34.04.67.09 1H5v2h1.81c1.04 1.79 2.97 3 5.19 3s4.15-1.21 5.19-3H19v-2h-1.09c.05-.33.09-.66.09-1v-1h1v-2h-1v-1c0-.34-.04-.67-.09-1H19V8zm-6 8h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
-              Bug
-            </button>
-            <button class="fw-type-btn" data-type="idea">
-              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7z"/></svg>
-              Idea
-            </button>
-            <button class="fw-type-btn" data-type="other">
-              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14l4 4V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/></svg>
-              Other
-            </button>
+            ${typeButtonsHtml.join("")}
           </div>
-          <textarea class="fw-textarea" placeholder="Tell us what's on your mind..."></textarea>
+          <textarea class="fw-textarea" placeholder="${config.feedbackPlaceholder}"></textarea>
           <div class="fw-actions">
             <button class="fw-screenshot-btn">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
@@ -251,6 +325,7 @@
           <h4>Thank you!</h4>
           <p>Your feedback has been received.</p>
         </div>
+        ${brandingHtml}
       </div>
     </div>
   `;
@@ -266,7 +341,12 @@
   const formEl = container.querySelector(".fw-form");
   const successEl = container.querySelector(".fw-success");
 
-  let selectedType = "bug";
+  // Set default selected type to first enabled
+  let selectedType = config.enableBugs
+    ? "bug"
+    : config.enableIdeas
+      ? "idea"
+      : "other";
   let screenshotData = null;
 
   trigger.addEventListener("click", () => {

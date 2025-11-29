@@ -73,9 +73,6 @@
 //   );
 // }
 
-
-
-
 "use client";
 
 import { formatDistanceToNow } from "date-fns";
@@ -98,16 +95,20 @@ const typeColors = {
 };
 
 export function FeedbackCard({ feedback }: { feedback: Feedback }) {
-  const Icon = typeIcons[feedback.type as keyof typeof typeIcons] || MessageCircle;
-  const typeColor = typeColors[feedback.type as keyof typeof typeColors] || "text-blue-500";
+  const Icon =
+    typeIcons[feedback.type as keyof typeof typeIcons] || MessageCircle;
+  const typeColor =
+    typeColors[feedback.type as keyof typeof typeColors] || "text-blue-500";
 
   return (
     <div className="group rounded-sm border border-zinc-800 bg-zinc-950 p-5 hover:border-zinc-700 hover:bg-zinc-900 transition-all">
       <div className="flex items-start gap-4">
-        <div className={`mt-0.5 p-2 rounded-sm bg-black border border-zinc-800 ${typeColor}`}>
-           <Icon className="h-4 w-4" />
+        <div
+          className={`mt-0.5 p-2 rounded-sm bg-black border border-zinc-800 ${typeColor}`}
+        >
+          <Icon className="h-4 w-4" />
         </div>
-        
+
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-3 mb-2">
             <span className="text-[10px] font-mono uppercase px-1.5 py-0.5 rounded-sm bg-zinc-900 text-zinc-400 border border-zinc-800">
@@ -115,7 +116,7 @@ export function FeedbackCard({ feedback }: { feedback: Feedback }) {
             </span>
             <div className="h-px w-3 bg-zinc-800" />
             <span className="text-xs font-mono text-zinc-500">
-                {feedback.userEmail || "Anonymous"}
+              {feedback.userEmail || "Anonymous"}
             </span>
             <span className="text-xs font-mono text-zinc-600 ml-auto">
               {feedback.createdAt &&
@@ -124,26 +125,28 @@ export function FeedbackCard({ feedback }: { feedback: Feedback }) {
                 })}
             </span>
           </div>
-          
-          <p className="text-sm text-zinc-300 leading-relaxed font-sans mb-3">{feedback.message}</p>
-          
+
+          <p className="text-sm text-zinc-300 leading-relaxed font-sans mb-3">
+            {feedback.message}
+          </p>
+
           {feedback.imageUrl && (
             <div className="mt-3 border border-zinc-800 rounded-sm overflow-hidden bg-black p-1 inline-block">
-                {/* biome-ignore lint/performance/noImgElement: external imagekit url */}
-                <img
+              {/* biome-ignore lint/performance/noImgElement: external imagekit url */}
+              <img
                 src={feedback.imageUrl}
                 alt="Evidence"
                 className="rounded-sm max-h-40 object-cover opacity-80 hover:opacity-100 transition-opacity"
-                />
+              />
             </div>
           )}
-          
+
           <div className="mt-4 flex gap-2">
-             {/* Metadata tags could go here */}
-             <div className="flex items-center gap-1 text-[10px] text-zinc-600 font-mono">
-                <Terminal className="h-3 w-3" />
-                <span>metadata.json</span>
-             </div>
+            {/* Metadata tags could go here */}
+            <div className="flex items-center gap-1 text-[10px] text-zinc-600 font-mono">
+              <Terminal className="h-3 w-3" />
+              <span>metadata.json</span>
+            </div>
           </div>
         </div>
       </div>

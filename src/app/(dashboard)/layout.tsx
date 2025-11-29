@@ -14,7 +14,6 @@
 //   );
 // }
 
-
 import { AppSidebar } from "@/components/app-sidebar";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 
@@ -28,7 +27,7 @@ export default function DashboardLayout({
       <SidebarProvider>
         <AppSidebar />
         <SidebarInset className="bg-black border-l border-zinc-800">
-            {children}
+          {children}
         </SidebarInset>
       </SidebarProvider>
     </div>

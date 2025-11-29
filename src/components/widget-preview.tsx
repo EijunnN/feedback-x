@@ -278,14 +278,11 @@
 //   );
 // }
 
-
-
-
 "use client";
 
+import type { LucideIcon } from "lucide-react";
 import { Bug, Lightbulb, MessageCircle } from "lucide-react";
-import type { ReactNode } from "react";
-import { useRef, useState } from "react";
+import { useState } from "react";
 
 interface WidgetPreviewProps {
   color: string;
@@ -295,6 +292,15 @@ interface WidgetPreviewProps {
   enableBugs: boolean;
   enableIdeas: boolean;
   enableOther: boolean;
+  bugLabel?: string;
+  bugEmoji?: string;
+  ideaLabel?: string;
+  ideaEmoji?: string;
+  otherLabel?: string;
+  otherEmoji?: string;
+  feedbackPlaceholder?: string;
+  brandingText?: string;
+  brandingLink?: string;
 }
 
 export function WidgetPreview({
@@ -305,6 +311,15 @@ export function WidgetPreview({
   enableBugs,
   enableIdeas,
   enableOther,
+  bugLabel = "Bug",
+  bugEmoji,
+  ideaLabel = "Idea",
+  ideaEmoji,
+  otherLabel = "Other",
+  otherEmoji,
+  feedbackPlaceholder = "Describe your issue or idea...",
+  brandingText = "Powered by Annya",
+  brandingLink = "https://annya.io",
 }: WidgetPreviewProps) {
   const [isOpen, setIsOpen] = useState(true); // Default open for preview
   const [selectedType, setSelectedType] = useState<string | null>(null);
@@ -324,10 +339,25 @@ export function WidgetPreview({
   };
 
   const enabledTypes = [
-    enableBugs && { key: "bug", label: "Bug", icon: Bug },
-    enableIdeas && { key: "idea", label: "Idea", icon: Lightbulb },
-    enableOther && { key: "other", label: "Other", icon: MessageCircle },
-  ].filter(Boolean) as { key: string; label: string; icon: any }[];
+    enableBugs && { key: "bug", label: bugLabel, emoji: bugEmoji, icon: Bug },
+    enableIdeas && {
+      key: "idea",
+      label: ideaLabel,
+      emoji: ideaEmoji,
+      icon: Lightbulb,
+    },
+    enableOther && {
+      key: "other",
+      label: otherLabel,
+      emoji: otherEmoji,
+      icon: MessageCircle,
+    },
+  ].filter(Boolean) as {
+    key: string;
+    label: string;
+    emoji?: string;
+    icon: LucideIcon;
+  }[];
 
   if (!selectedType && enabledTypes.length > 0) {
     setSelectedType(enabledTypes[0].key);
@@ -337,12 +367,12 @@ export function WidgetPreview({
     <div className="relative bg-zinc-950 rounded-sm h-[500px] overflow-hidden border border-zinc-800 shadow-2xl">
       {/* Fake Browser UI */}
       <div className="bg-black border-b border-zinc-800 h-8 flex items-center px-3 gap-2">
-         <div className="flex gap-1.5">
-            <div className="w-2.5 h-2.5 rounded-full bg-zinc-800" />
-            <div className="w-2.5 h-2.5 rounded-full bg-zinc-800" />
-            <div className="w-2.5 h-2.5 rounded-full bg-zinc-800" />
-         </div>
-         <div className="bg-zinc-900 h-5 w-40 rounded-sm mx-auto" />
+        <div className="flex gap-1.5">
+          <div className="w-2.5 h-2.5 rounded-full bg-zinc-800" />
+          <div className="w-2.5 h-2.5 rounded-full bg-zinc-800" />
+          <div className="w-2.5 h-2.5 rounded-full bg-zinc-800" />
+        </div>
+        <div className="bg-zinc-900 h-5 w-40 rounded-sm mx-auto" />
       </div>
 
       <div className="absolute inset-0 top-8 bg-[radial-gradient(#333_1px,transparent_1px)] [background-size:16px_16px] opacity-20" />
@@ -359,9 +389,19 @@ export function WidgetPreview({
           height: 48,
         }}
       >
-         <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-         </svg>
+        <svg
+          className="w-6 h-6 text-white"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"
+          />
+        </svg>
       </button>
 
       {/* Modal */}
@@ -375,10 +415,22 @@ export function WidgetPreview({
               Send Feedback
             </span>
             <button className="text-zinc-500 hover:text-white">
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
             </button>
           </div>
-          
+
           <div className="p-4 space-y-4">
             <div className="flex gap-2 p-1 bg-zinc-900 rounded-lg">
               {enabledTypes.map((type) => (
@@ -391,36 +443,65 @@ export function WidgetPreview({
                       : "text-zinc-500 hover:text-zinc-300"
                   }`}
                 >
-                  <type.icon className="w-4 h-4" />
+                  {type.emoji ? (
+                    <span className="text-base">{type.emoji}</span>
+                  ) : (
+                    <type.icon className="w-4 h-4" />
+                  )}
                   {type.label}
                 </button>
               ))}
             </div>
 
             <div className="space-y-2">
-                <textarea 
-                    className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-3 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-zinc-700 resize-none h-24"
-                    placeholder="Describe your issue or idea..."
-                />
+              <textarea
+                className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-3 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-zinc-700 resize-none h-24"
+                placeholder={feedbackPlaceholder}
+              />
             </div>
 
             <div className="flex gap-2">
-               <button className="flex items-center gap-2 px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-xs text-zinc-400 hover:text-white transition-colors">
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                  Screenshot
-               </button>
-               <button 
+              <button className="flex items-center gap-2 px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-xs text-zinc-400 hover:text-white transition-colors">
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
+                  />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
+                  />
+                </svg>
+                Screenshot
+              </button>
+              <button
                 className="flex-1 py-2 rounded-lg text-xs font-semibold text-white shadow-lg transition-opacity hover:opacity-90"
                 style={{ backgroundColor: color }}
-               >
-                  Send Feedback
-               </button>
+              >
+                Send Feedback
+              </button>
             </div>
           </div>
-          
+
           {showBranding && (
             <div className="bg-zinc-900 py-2 text-center border-t border-zinc-800">
-                <span className="text-[10px] text-zinc-500 font-medium">Powered by Annya</span>
+              <a
+                href={brandingLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[10px] text-zinc-500 font-medium hover:text-zinc-400 transition-colors"
+              >
+                {brandingText}
+              </a>
             </div>
           )}
         </div>

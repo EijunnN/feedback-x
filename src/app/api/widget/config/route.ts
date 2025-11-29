@@ -62,6 +62,22 @@ export async function GET(request: NextRequest) {
     enableIdeas: project.enableIdeas ?? true,
     enableOther: project.enableOther ?? true,
     allowImages: planLimits.allowImages,
+    // Capture matrix customization (all plans)
+    bugLabel: project.bugLabel || "Bug",
+    bugEmoji: project.bugEmoji || "",
+    ideaLabel: project.ideaLabel || "Idea",
+    ideaEmoji: project.ideaEmoji || "",
+    otherLabel: project.otherLabel || "Other",
+    otherEmoji: project.otherEmoji || "",
+    feedbackPlaceholder:
+      project.feedbackPlaceholder || "Describe your issue or idea...",
+    // Branding customization (Max plan only)
+    brandingText: planLimits.allowRemoveBranding
+      ? project.brandingText || "Powered by Annya"
+      : "Powered by Annya",
+    brandingLink: planLimits.allowRemoveBranding
+      ? project.brandingLink || "https://annya.io"
+      : "https://annya.io",
   };
 
   return NextResponse.json(config, { headers: corsHeaders });

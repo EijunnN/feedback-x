@@ -1,12 +1,12 @@
 import { Check, ChevronDown } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 interface SelectProps {
   value: string;
@@ -33,7 +33,7 @@ export function Select({
           className={cn(
             "w-full justify-between bg-black border-zinc-800 text-left font-normal hover:bg-zinc-900 rounded-sm font-mono text-xs h-9",
             !value && "text-muted-foreground",
-            className
+            className,
           )}
         >
           {selectedLabel || placeholder}
@@ -48,7 +48,9 @@ export function Select({
             className="flex items-center justify-between py-2 px-3 text-xs font-mono text-zinc-300 focus:bg-zinc-900 focus:text-white cursor-pointer rounded-none"
           >
             {option.label}
-            {value === option.value && <Check className="h-3 w-3 text-orange-500" />}
+            {value === option.value && (
+              <Check className="h-3 w-3 text-orange-500" />
+            )}
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>

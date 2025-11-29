@@ -167,16 +167,9 @@
 //   );
 // }
 
-
-
-
-
-
-
-
-
 import { auth } from "@clerk/nextjs/server";
 import { and, eq } from "drizzle-orm";
+import { Terminal } from "lucide-react";
 import { revalidatePath } from "next/cache";
 import { notFound, redirect } from "next/navigation";
 import { CopyButton } from "@/components/copy-button";
@@ -194,7 +187,6 @@ import { SidebarTrigger } from "@/components/ui/sidebar";
 import { db } from "@/db";
 import { projects } from "@/db/schema";
 import { getUserPlanDetails } from "@/lib/plans";
-import { Terminal } from "lucide-react";
 
 async function updateProject(formData: FormData) {
   "use server";
@@ -215,12 +207,30 @@ async function updateProject(formData: FormData) {
   }
   if (planDetails.allowRemoveBranding) {
     updateData.showBranding = formData.get("showBranding") === "true";
+    updateData.brandingText =
+      (formData.get("brandingText") as string) || "Powered by Annya";
+    updateData.brandingLink =
+      (formData.get("brandingLink") as string) || "https://annya.io";
   }
   updateData.enableBugs = formData.get("enableBugs") === "true";
   updateData.enableIdeas = formData.get("enableIdeas") === "true";
   updateData.enableOther = formData.get("enableOther") === "true";
 
-  await db.update(projects).set(updateData).where(and(eq(projects.id, id), eq(projects.userId, userId)));
+  // Capture matrix customization (all plans)
+  updateData.bugLabel = (formData.get("bugLabel") as string) || "Bug";
+  updateData.bugEmoji = (formData.get("bugEmoji") as string) || "";
+  updateData.ideaLabel = (formData.get("ideaLabel") as string) || "Idea";
+  updateData.ideaEmoji = (formData.get("ideaEmoji") as string) || "";
+  updateData.otherLabel = (formData.get("otherLabel") as string) || "Other";
+  updateData.otherEmoji = (formData.get("otherEmoji") as string) || "";
+  updateData.feedbackPlaceholder =
+    (formData.get("feedbackPlaceholder") as string) ||
+    "Describe your issue or idea...";
+
+  await db
+    .update(projects)
+    .set(updateData)
+    .where(and(eq(projects.id, id), eq(projects.userId, userId)));
   revalidatePath(`/projects/${id}/settings`);
 }
 
@@ -229,7 +239,9 @@ async function deleteProject(formData: FormData) {
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
   const id = formData.get("id") as string;
-  await db.delete(projects).where(and(eq(projects.id, id), eq(projects.userId, userId)));
+  await db
+    .delete(projects)
+    .where(and(eq(projects.id, id), eq(projects.userId, userId)));
   redirect("/projects");
 }
 
@@ -261,76 +273,104 @@ export default async function ProjectSettingsPage({
         <Breadcrumb>
           <BreadcrumbList>
             <BreadcrumbItem>
-              <BreadcrumbLink href="/projects" className="font-mono text-xs uppercase text-zinc-500 hover:text-zinc-300">Projects</BreadcrumbLink>
+              <BreadcrumbLink
+                href="/projects"
+                className="font-mono text-xs uppercase text-zinc-500 hover:text-zinc-300"
+              >
+                Projects
+              </BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator className="text-zinc-600" />
             <BreadcrumbItem>
-              <BreadcrumbLink href={`/projects/${id}`} className="font-mono text-xs uppercase text-zinc-500 hover:text-zinc-300">{project.name}</BreadcrumbLink>
+              <BreadcrumbLink
+                href={`/projects/${id}`}
+                className="font-mono text-xs uppercase text-zinc-500 hover:text-zinc-300"
+              >
+                {project.name}
+              </BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator className="text-zinc-600" />
             <BreadcrumbItem>
-              <BreadcrumbPage className="font-mono text-xs uppercase tracking-wider text-orange-500 font-bold">Config</BreadcrumbPage>
+              <BreadcrumbPage className="font-mono text-xs uppercase tracking-wider text-orange-500 font-bold">
+                Config
+              </BreadcrumbPage>
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
       </header>
-      
+
       <div className="flex flex-1 flex-col gap-10 p-8 bg-black w-full">
-        
         {/* Installation Section */}
         <section className="border border-zinc-800 rounded-sm bg-zinc-950/50 p-8">
           <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                 <Terminal className="h-4 w-4 text-orange-500" />
-                 <h2 className="text-sm font-bold text-white uppercase font-mono tracking-wider">Installation Script</h2>
-              </div>
-              <div className="text-[10px] font-mono text-zinc-500 border border-zinc-800 px-2 py-1 rounded-sm bg-black">READONLY</div>
+            <div className="flex items-center gap-2">
+              <Terminal className="h-4 w-4 text-orange-500" />
+              <h2 className="text-sm font-bold text-white uppercase font-mono tracking-wider">
+                Installation Script
+              </h2>
+            </div>
+            <div className="text-[10px] font-mono text-zinc-500 border border-zinc-800 px-2 py-1 rounded-sm bg-black">
+              READONLY
+            </div>
           </div>
           <div className="relative group">
             <div className="absolute -inset-0.5 bg-gradient-to-r from-orange-500/20 to-purple-500/20 rounded-sm blur opacity-20" />
             <div className="relative">
-                <pre className="bg-black border border-zinc-800 p-6 rounded-sm text-xs font-mono text-zinc-300 overflow-x-auto whitespace-pre-wrap break-all shadow-inner">
+              <pre className="bg-black border border-zinc-800 p-6 rounded-sm text-xs font-mono text-zinc-300 overflow-x-auto whitespace-pre-wrap break-all shadow-inner">
                 {widgetScript}
-                </pre>
-                <CopyButton
+              </pre>
+              <CopyButton
                 text={widgetScript}
                 className="absolute top-4 right-4 bg-zinc-800 hover:bg-zinc-700 text-white border border-zinc-700 h-8 w-8 rounded-sm"
-                />
+              />
             </div>
           </div>
         </section>
 
         <ProjectSettingsForm
+          key={`${project.id}-${project.enableBugs}-${project.enableIdeas}-${project.enableOther}-${project.showBranding}`}
           project={project}
           planDetails={planDetails}
           updateAction={updateProject}
         />
 
         <div className="grid md:grid-cols-2 gap-8">
-            <section className="border border-zinc-800 rounded-sm bg-zinc-950/50 p-8 h-full">
-                <h2 className="text-sm font-bold text-white uppercase font-mono tracking-wider mb-4">API Credentials</h2>
-                <div className="flex items-center gap-2">
-                    <code className="bg-black border border-zinc-800 px-4 py-3 rounded-sm text-xs font-mono text-zinc-300 flex-1 truncate">
-                    {project.apiKey}
-                    </code>
-                    <CopyButton text={project.apiKey} className="bg-zinc-800 hover:bg-zinc-700 text-white border border-zinc-700 rounded-sm h-10 w-10" />
-                </div>
-            </section>
+          <section className="border border-zinc-800 rounded-sm bg-zinc-950/50 p-8 h-full">
+            <h2 className="text-sm font-bold text-white uppercase font-mono tracking-wider mb-4">
+              API Credentials
+            </h2>
+            <div className="flex items-center gap-2">
+              <code className="bg-black border border-zinc-800 px-4 py-3 rounded-sm text-xs font-mono text-zinc-300 flex-1 truncate">
+                {project.apiKey}
+              </code>
+              <CopyButton
+                text={project.apiKey}
+                className="bg-zinc-800 hover:bg-zinc-700 text-white border border-zinc-700 rounded-sm h-10 w-10"
+              />
+            </div>
+          </section>
 
-            <section className="border border-red-900/30 rounded-sm bg-red-950/5 p-8 h-full">
-                <h2 className="text-sm font-bold text-red-500 uppercase font-mono tracking-wider mb-4">
-                    Danger Zone
-                </h2>
-                <div className="flex flex-col gap-4">
-                    <p className="text-xs text-zinc-500">Irreversibly delete this project and all its collected data.</p>
-                    <form action={deleteProject}>
-                        <input type="hidden" name="id" value={project.id} />
-                        <Button type="submit" variant="destructive" size="sm" className="w-full font-mono text-xs uppercase bg-red-900/20 hover:bg-red-900 border border-red-900 text-red-400 hover:text-white rounded-sm">
-                        Delete Project
-                        </Button>
-                    </form>
-                </div>
-            </section>
+          <section className="border border-red-900/30 rounded-sm bg-red-950/5 p-8 h-full">
+            <h2 className="text-sm font-bold text-red-500 uppercase font-mono tracking-wider mb-4">
+              Danger Zone
+            </h2>
+            <div className="flex flex-col gap-4">
+              <p className="text-xs text-zinc-500">
+                Irreversibly delete this project and all its collected data.
+              </p>
+              <form action={deleteProject}>
+                <input type="hidden" name="id" value={project.id} />
+                <Button
+                  type="submit"
+                  variant="destructive"
+                  size="sm"
+                  className="w-full font-mono text-xs uppercase bg-red-900/20 hover:bg-red-900 border border-red-900 text-red-400 hover:text-white rounded-sm"
+                >
+                  Delete Project
+                </Button>
+              </form>
+            </div>
+          </section>
         </div>
       </div>
     </>

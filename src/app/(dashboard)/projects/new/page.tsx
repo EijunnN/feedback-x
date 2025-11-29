@@ -133,13 +133,11 @@
 //   );
 // }
 
-
-
-
-
 import { auth } from "@clerk/nextjs/server";
 import { AlertCircle, Terminal } from "lucide-react";
+import { nanoid } from "nanoid";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -154,8 +152,6 @@ import { SidebarTrigger } from "@/components/ui/sidebar";
 import { db } from "@/db";
 import { projects } from "@/db/schema";
 import { canCreateProject, getUserUsage, PLANS } from "@/lib/plans";
-import { nanoid } from "nanoid";
-import { redirect } from "next/navigation";
 
 async function createProject(formData: FormData) {
   "use server";
@@ -201,11 +197,18 @@ export default async function NewProjectPage() {
         <Breadcrumb>
           <BreadcrumbList>
             <BreadcrumbItem>
-              <BreadcrumbLink href="/projects" className="font-mono text-xs uppercase text-zinc-500 hover:text-zinc-300">Projects</BreadcrumbLink>
+              <BreadcrumbLink
+                href="/projects"
+                className="font-mono text-xs uppercase text-zinc-500 hover:text-zinc-300"
+              >
+                Projects
+              </BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator className="text-zinc-600" />
             <BreadcrumbItem>
-              <BreadcrumbPage className="font-mono text-xs uppercase tracking-wider text-orange-500 font-bold">Initialize</BreadcrumbPage>
+              <BreadcrumbPage className="font-mono text-xs uppercase tracking-wider text-orange-500 font-bold">
+                Initialize
+              </BreadcrumbPage>
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
@@ -213,11 +216,15 @@ export default async function NewProjectPage() {
       <div className="flex flex-1 flex-col p-6 bg-black">
         <div className="mx-auto w-full max-w-lg">
           <div className="mb-8 border-b border-zinc-800 pb-4">
-             <div className="flex items-center gap-2 mb-2">
-                 <Terminal className="h-5 w-5 text-orange-500" />
-                 <h1 className="text-xl font-bold text-white tracking-tight">Initialize Project</h1>
-             </div>
-             <p className="text-sm text-zinc-500">Configure a new feedback endpoint.</p>
+            <div className="flex items-center gap-2 mb-2">
+              <Terminal className="h-5 w-5 text-orange-500" />
+              <h1 className="text-xl font-bold text-white tracking-tight">
+                Initialize Project
+              </h1>
+            </div>
+            <p className="text-sm text-zinc-500">
+              Configure a new feedback endpoint.
+            </p>
           </div>
 
           {!canCreate ? (
@@ -229,9 +236,14 @@ export default async function NewProjectPage() {
                     Quota Exceeded
                   </h3>
                   <p className="text-sm text-zinc-400 mt-1">
-                    You have reached the limit of {usage.projects.limit} projects.
+                    You have reached the limit of {usage.projects.limit}{" "}
+                    projects.
                   </p>
-                  <Button asChild className="mt-4 bg-red-600 hover:bg-red-500 text-white border-0 font-mono text-xs rounded-sm" size="sm">
+                  <Button
+                    asChild
+                    className="mt-4 bg-red-600 hover:bg-red-500 text-white border-0 font-mono text-xs rounded-sm"
+                    size="sm"
+                  >
                     <Link href="/billing">Upgrade Plan</Link>
                   </Button>
                 </div>
@@ -240,39 +252,52 @@ export default async function NewProjectPage() {
           ) : (
             <form action={createProject} className="space-y-6">
               <div className="space-y-2">
-                <label htmlFor="name" className="text-xs font-mono uppercase text-zinc-400">
+                <label
+                  htmlFor="name"
+                  className="text-xs font-mono uppercase text-zinc-400"
+                >
                   Project Name <span className="text-red-500">*</span>
                 </label>
-                <Input 
-                    id="name" 
-                    name="name" 
-                    placeholder="production-app-v1" 
-                    required 
-                    className="bg-zinc-950 border-zinc-800 text-white placeholder:text-zinc-700 font-mono rounded-sm focus-visible:ring-orange-500/50"
+                <Input
+                  id="name"
+                  name="name"
+                  placeholder="production-app-v1"
+                  required
+                  className="bg-zinc-950 border-zinc-800 text-white placeholder:text-zinc-700 font-mono rounded-sm focus-visible:ring-orange-500/50"
                 />
               </div>
               <div className="space-y-2">
-                <label htmlFor="domain" className="text-xs font-mono uppercase text-zinc-400">
+                <label
+                  htmlFor="domain"
+                  className="text-xs font-mono uppercase text-zinc-400"
+                >
                   Allowed Domain
                 </label>
-                <Input 
-                    id="domain" 
-                    name="domain" 
-                    placeholder="app.example.com" 
-                    className="bg-zinc-950 border-zinc-800 text-white placeholder:text-zinc-700 font-mono rounded-sm focus-visible:ring-orange-500/50"
+                <Input
+                  id="domain"
+                  name="domain"
+                  placeholder="app.example.com"
+                  className="bg-zinc-950 border-zinc-800 text-white placeholder:text-zinc-700 font-mono rounded-sm focus-visible:ring-orange-500/50"
                 />
                 <p className="text-[10px] text-zinc-600 font-mono">
                   Optional. Restricts widget execution to this origin.
                 </p>
               </div>
-              
+
               <div className="pt-4 border-t border-zinc-800">
-                  <Button type="submit" className="w-full bg-white text-black hover:bg-zinc-200 font-mono text-xs uppercase font-bold rounded-sm h-10">
-                    Create Resource
-                  </Button>
-                  <p className="text-[10px] text-center text-zinc-600 font-mono mt-4">
-                    Usage: {usage.projects.used} / {usage.projects.limit === Infinity ? "∞" : usage.projects.limit} slots
-                  </p>
+                <Button
+                  type="submit"
+                  className="w-full bg-white text-black hover:bg-zinc-200 font-mono text-xs uppercase font-bold rounded-sm h-10"
+                >
+                  Create Resource
+                </Button>
+                <p className="text-[10px] text-center text-zinc-600 font-mono mt-4">
+                  Usage: {usage.projects.used} /{" "}
+                  {usage.projects.limit === Infinity
+                    ? "∞"
+                    : usage.projects.limit}{" "}
+                  slots
+                </p>
               </div>
             </form>
           )}

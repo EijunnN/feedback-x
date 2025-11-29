@@ -29,6 +29,21 @@ export const projects = pgTable("projects", {
   // Notifications (Pro+)
   notifyEmail: text("notify_email"),
 
+  // Capture matrix customization (all plans)
+  bugLabel: text("bug_label").default("Bug"),
+  bugEmoji: text("bug_emoji").default("🐛"),
+  ideaLabel: text("idea_label").default("Idea"),
+  ideaEmoji: text("idea_emoji").default("💡"),
+  otherLabel: text("other_label").default("Other"),
+  otherEmoji: text("other_emoji").default("💬"),
+  feedbackPlaceholder: text("feedback_placeholder").default(
+    "Describe your issue or idea...",
+  ),
+
+  // Branding customization (Max plan)
+  brandingText: text("branding_text").default("Powered by Annya"),
+  brandingLink: text("branding_link").default("https://annya.io"),
+
   createdAt: timestamp("created_at").defaultNow(),
 });
 
