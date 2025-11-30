@@ -270,6 +270,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select-custom";
 import { WidgetPreview } from "@/components/widget-preview";
+import { toast } from "sonner";
 
 interface ProjectSettingsFormProps {
   project: {
@@ -343,12 +344,17 @@ export function ProjectSettingsForm({
 
   const handleSubmit = async (formData: FormData) => {
     // Manually set checkbox values from React state to ensure they're current
-    formData.set("widgetPosition", widgetPosition);
-    formData.set("enableBugs", String(enableBugs));
-    formData.set("enableIdeas", String(enableIdeas));
-    formData.set("enableOther", String(enableOther));
-    formData.set("showBranding", String(showBranding));
-    await updateAction(formData);
+    try {
+      formData.set("widgetPosition", widgetPosition);
+      formData.set("enableBugs", String(enableBugs));
+      formData.set("enableIdeas", String(enableIdeas));
+      formData.set("enableOther", String(enableOther));
+      formData.set("showBranding", String(showBranding));
+      await updateAction(formData);
+      toast.success("Configuration saved successfully");
+    } catch (error) {
+      toast.error("Failed to save configuration");
+    }
   };
 
   return (

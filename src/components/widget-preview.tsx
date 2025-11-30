@@ -375,7 +375,7 @@ export function WidgetPreview({
         <div className="bg-zinc-900 h-5 w-40 rounded-sm mx-auto" />
       </div>
 
-      <div className="absolute inset-0 top-8 bg-[radial-gradient(#333_1px,transparent_1px)] [background-size:16px_16px] opacity-20" />
+      <div className="absolute inset-0 top-8 bg-[radial-gradient(#333_1px,transparent_1px)] bg-size-[16px_16px] opacity-20" />
 
       {/* Trigger Button */}
       <button
